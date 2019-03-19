@@ -10,6 +10,7 @@
  * @see https://curl.haxx.se/libcurl/
  */
 #include <stdio.h>
+#include <stdlib.h>
 #include <curl/curl.h>
 
 #include "gconn.h"
@@ -17,7 +18,7 @@
 
 static struct curl_slist *slist;
 static int _numReq, _reqInterval;
-static rscTimings timings, *pTimings;
+//static rscTimings medianTimings, *pMedianTimings;
 
 /**
  * @brief Internal function used to consume HTTP response body
@@ -109,8 +110,16 @@ rscTimings *gconn_rsc_timings_http_get()
 {
 	CURL *curl;
 	CURLcode res;
+	int req;
+	rscTimings timings, *pTimings;
 
-	pTimings = NULL;
+	pTimings = (rscTimings *)malloc(sizeof(rscTimings) * _numReq);
+	if (!pTimings)
+	{
+		fprintf(stderr, "Error: couldn't allocate the resource timing set\n");
+		goto out;
+	}
+
 	curl = curl_easy_init();
 	if (curl) {
 		// Set google.com as the target
@@ -127,94 +136,115 @@ rscTimings *gconn_rsc_timings_http_get()
 		if (slist)
 			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 
-		// Perform the request, res will get the return code
-		res = curl_easy_perform(curl);
-		// Check for errors
-		if (res == CURLE_OK) {
-			res = curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &timings.remote_ip);
-			if (res != CURLE_OK || !timings.remote_ip) {
-				fprintf(stderr,
-						"Error: couldn't retrieve IP address of the HTTP server: %s\n",
-						curl_easy_strerror(res));
-				goto out;
-			}
+		// Use persistent HTTP connection to make all requests
+		for (req = 0; req < _numReq; req++) {
+			// Perform the request, res will get the return code
+			fprintf(stderr, "Info: making HTTP request #%d\n", req+1);
+			res = curl_easy_perform(curl);
+			// Check for errors
+			if (res == CURLE_OK) {
+				res = curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &timings.remote_ip);
+				if (res != CURLE_OK || !timings.remote_ip) {
+					fprintf(stderr,
+							"Error: couldn't retrieve IP address of the HTTP server: %s\n",
+							curl_easy_strerror(res));
+					goto cleanup;
+				}
 
-			res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &timings.http_code);
-			if (res != CURLE_OK) {
-				fprintf(stderr,
-						"Error: couldn't retrieve HTTP response code: %s\n",
-						curl_easy_strerror(res));
-				goto out;
-			}
+				res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &timings.http_code);
+				if (res != CURLE_OK) {
+					fprintf(stderr,
+							"Error: couldn't retrieve HTTP response code: %s\n",
+							curl_easy_strerror(res));
+					goto cleanup;
+				}
 
-			res = curl_easy_getinfo(curl, CURLINFO_NAMELOOKUP_TIME, &timings.time_namelookup);
-			if (res != CURLE_OK) {
-				fprintf(stderr,
-						"Error: couldn't retrieve name lookup time: %s\n",
-						curl_easy_strerror(res));
-				goto out;
-			}
+				res = curl_easy_getinfo(curl, CURLINFO_NAMELOOKUP_TIME, &timings.time_namelookup);
+				if (res != CURLE_OK) {
+					fprintf(stderr,
+							"Error: couldn't retrieve name lookup time: %s\n",
+							curl_easy_strerror(res));
+					goto cleanup;
+				}
 
-			res = curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &timings.time_connect);
-			if (res != CURLE_OK) {
-				fprintf(stderr,
-						"Error: couldn't retrieve connect time: %s\n",
-						curl_easy_strerror(res));
-				goto out;
-			}
+				res = curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &timings.time_connect);
+				if (res != CURLE_OK) {
+					fprintf(stderr,
+							"Error: couldn't retrieve connect time: %s\n",
+							curl_easy_strerror(res));
+					goto cleanup;
+				}
 
-			res = curl_easy_getinfo(curl, CURLINFO_APPCONNECT_TIME, &timings.time_appconnect);
-			if (res != CURLE_OK) {
-				fprintf(stderr,
-						"Error: couldn't retrieve application connect time: %s\n",
-						curl_easy_strerror(res));
-				goto out;
-			}
+				res = curl_easy_getinfo(curl, CURLINFO_APPCONNECT_TIME, &timings.time_appconnect);
+				if (res != CURLE_OK) {
+					fprintf(stderr,
+							"Error: couldn't retrieve application connect time: %s\n",
+							curl_easy_strerror(res));
+					goto cleanup;
+				}
 
-			res = curl_easy_getinfo(curl, CURLINFO_PRETRANSFER_TIME, &timings.time_pretransfer);
-			if (res != CURLE_OK) {
-				fprintf(stderr,
-						"Error: couldn't retrieve pre-transfer time: %s\n",
-						curl_easy_strerror(res));
-				goto out;
-			}
+				res = curl_easy_getinfo(curl, CURLINFO_PRETRANSFER_TIME, &timings.time_pretransfer);
+				if (res != CURLE_OK) {
+					fprintf(stderr,
+							"Error: couldn't retrieve pre-transfer time: %s\n",
+							curl_easy_strerror(res));
+					goto cleanup;
+				}
 
-			res = curl_easy_getinfo(curl, CURLINFO_STARTTRANSFER_TIME, &timings.time_starttransfer);
-			if (res != CURLE_OK) {
-				fprintf(stderr,
-						"Error: couldn't retrieve start-transfer time: %s\n",
-						curl_easy_strerror(res));
-				goto out;
-			}
+				res = curl_easy_getinfo(curl, CURLINFO_STARTTRANSFER_TIME, &timings.time_starttransfer);
+				if (res != CURLE_OK) {
+					fprintf(stderr,
+							"Error: couldn't retrieve start-transfer time: %s\n",
+							curl_easy_strerror(res));
+					goto cleanup;
+				}
 
-			res = curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &timings.time_total);
-			if (res != CURLE_OK) {
-				fprintf(stderr,
-						"Error: couldn't retrieve total time: %s\n",
-						curl_easy_strerror(res));
-				goto out;
-			}
+				res = curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &timings.time_total);
+				if (res != CURLE_OK) {
+					fprintf(stderr,
+							"Error: couldn't retrieve total time: %s\n",
+							curl_easy_strerror(res));
+					goto cleanup;
+				}
 
-			res = curl_easy_getinfo(curl, CURLINFO_REDIRECT_TIME, &timings.time_redirect);
-			if (res != CURLE_OK) {
-				fprintf(stderr,
-						"Error: couldn't retrieve redirect time: %s\n",
-						curl_easy_strerror(res));
-				goto out;
-			}
+				res = curl_easy_getinfo(curl, CURLINFO_REDIRECT_TIME, &timings.time_redirect);
+				if (res != CURLE_OK) {
+					fprintf(stderr,
+							"Error: couldn't retrieve redirect time: %s\n",
+							curl_easy_strerror(res));
+					goto cleanup;
+				}
 
-			pTimings = &timings;
-		} else {
-			fprintf(stderr, "Error: couldn't make HTTP request: %s\n",
-					curl_easy_strerror(res));
+				pTimings[req] = timings;
+			} else {
+				fprintf(stderr, "Error: couldn't make HTTP request: %s\n",
+						curl_easy_strerror(res));
+			}
 		}
-out:
+
+		for (req = 0; req < _numReq; req++)
+			printf("%d | %s | %lu | %.6lf | %.6lf | %.6lf | %.6lf | %.6lf | %.6lf | %.6lf\n",
+				req+1,
+				pTimings[req].remote_ip,
+				pTimings[req].http_code,
+				pTimings[req].time_namelookup,
+				pTimings[req].time_connect,
+				pTimings[req].time_appconnect,
+				pTimings[req].time_pretransfer,
+				pTimings[req].time_starttransfer,
+				pTimings[req].time_total,
+				pTimings[req].time_redirect);
+
+cleanup:
+		// Free resource timeing set
+		free(pTimings);
+
 		// Free the custom headers
 		curl_slist_free_all(slist);
 
 		// General cleanup
 		curl_easy_cleanup(curl);
 	}
-
+out:
 	return pTimings;
 }

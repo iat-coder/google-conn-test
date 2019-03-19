@@ -94,9 +94,9 @@ int main(int argc, char *argv[])
 
 	// Display timing stats
 	printf("--- Output ---\n");
-	printf("SKTEST;%s;%lu;%.6lf;%.6lf;%.6lf;%.6lf\n",
+/*	printf("SKTEST;%s;%lu;%.6lf;%.6lf;%.6lf;%.6lf\n",
 		   timings->remote_ip, timings->http_code, timings->time_namelookup,
-		   timings->time_connect, timings->time_starttransfer, timings->time_total);
+		   timings->time_connect, timings->time_starttransfer, timings->time_total);*/
 
 	return 0;
 }
