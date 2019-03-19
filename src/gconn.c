@@ -13,9 +13,10 @@
 #include <curl/curl.h>
 
 #include "gconn.h"
+#include "median.h"
 
 static struct curl_slist *slist;
-static unsigned long _numReq, _reqInterval;
+static int _numReq, _reqInterval;
 
 /**
  * @brief Internal function used to consume HTTP response body
@@ -65,16 +66,16 @@ bool gconn_add_http_header(char *httpHeader)
  * @param numReq Number of requests
  * @return Success/fail
  */
-bool gconn_set_num_req(unsigned long numReq)
+bool gconn_set_num_req(int numReq)
 {
 	if (numReq >= 0 && numReq <= GCONN_MAX_NUM_REQ) {
 		_numReq = numReq ? numReq : GCONN_NUM_REQ;
-		fprintf(stderr, "Info: number of requests set to %lu\n",
+		fprintf(stderr, "Info: number of requests set to %d\n",
 				_numReq);
 		return true;
 	}
 
-	fprintf(stderr, "Error: invalid number of requests: %lu\n", numReq);
+	fprintf(stderr, "Error: invalid number of requests: %d\n", numReq);
 	return false;
 }
 
@@ -83,16 +84,16 @@ bool gconn_set_num_req(unsigned long numReq)
  * @param reqInterval Interval between requests
  * @return Success/fail
  */
-bool gconn_set_interval_req(unsigned long reqInterval)
+bool gconn_set_interval_req(int reqInterval)
 {
 	if (reqInterval >= 0 && reqInterval <= GCONN_MAX_REQ_INTERVAL_MS) {
 		_reqInterval = reqInterval;
-		fprintf(stderr, "Info: interval between requests set to %lu\n",
+		fprintf(stderr, "Info: interval between requests set to %d\n",
 				_reqInterval);
 		return true;
 	}
 
-	fprintf(stderr, "Error: invalid interval between requests: %lu\n",
+	fprintf(stderr, "Error: invalid interval between requests: %d\n",
 			reqInterval);
 	return false;
 }

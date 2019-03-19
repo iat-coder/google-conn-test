@@ -26,8 +26,8 @@ typedef struct rscTimings rscTimings;
 
 void gconn_init(void);
 bool gconn_add_http_header(char *httpHeader);
-bool gconn_set_num_req(unsigned long numReq);
-bool gconn_set_interval_req(unsigned long reqInterval);
+bool gconn_set_num_req(int numReq);
+bool gconn_set_interval_req(int reqInterval);
 rscTimings *gconn_rsc_timings_http_get();
 
 #endif

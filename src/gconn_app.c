@@ -17,25 +17,32 @@
 
 #include "gconn.h"
 
-static int validate_int_option(char *opt, unsigned long *val)
+static int validate_int_option(char *opt, int *val)
 {
-	char *endptr = NULL;
+	char *pEnd = NULL;
 
 	errno = 0;
-	*val = strtol(opt, &endptr, 10);
-	if (opt == endptr) {
-		fprintf(stderr, "Error: option %s: %lu invalid value\n", opt, *val);
+	const long sl = strtol(opt, &pEnd, 10);
+	if (opt == pEnd) {
+		fprintf(stderr, "Error: option %s is an invalid decimal value\n", opt);
 		return -EINVAL;
-	} else if (errno == ERANGE && (*val == LONG_MIN || *val == LONG_MAX)) {
-		fprintf(stderr, "Error: option %s: %lu out-of-range value\n", opt, *val);
+	}  else if (*pEnd != '\0') {
+		fprintf(stderr, "Error: option %s has extra characters at the end (%s)\n", opt, pEnd);
+		return -EINVAL;
+	} else if (errno == ERANGE && (sl == LONG_MIN || sl == LONG_MAX)) {
+		fprintf(stderr, "Error: option %s is out-of-range value (long)\n", opt);
+		return -ERANGE;
+	} else if (sl > INT_MAX || sl < INT_MIN) {
+		fprintf(stderr, "Error: option %s is out-of-range value (int)\n", opt);
 		return -ERANGE;
 	} else if (errno == EINVAL) { /* not in all c99 implementations - gcc OK */
-		fprintf(stderr, "Error: option %s: %lu invalid base\n", opt, *val);
+		fprintf(stderr, "Error: option %s: %d invalid base\n", opt, *val);
 		return -EINVAL;
-	} else if (errno != 0 && *val == 0) {
-		fprintf(stderr, "Error: option %s: %lu invalid (unspecified error occurred)\n", opt, *val);
+	} else if (errno != 0 && sl == 0) {
+		fprintf(stderr, "Error: option %s: %d invalid (unspecified error occurred)\n", opt, *val);
 		return -EINVAL;
 	}
+	*val = (int)sl;
 
 	return 0;
 }
@@ -43,7 +50,7 @@ static int validate_int_option(char *opt, unsigned long *val)
 int main(int argc, char *argv[])
 {
 	int opt, res;
-	unsigned long numReq = GCONN_NUM_REQ, reqInterval = GCONN_REQ_INTERVAL_MS;
+	int numReq = GCONN_NUM_REQ, reqInterval = GCONN_REQ_INTERVAL_MS;
 
 	gconn_init();
 
