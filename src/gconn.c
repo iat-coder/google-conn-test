@@ -21,9 +21,10 @@ static unsigned long _numReq, _reqInterval;
  * @brief Internal function used to consume HTTP response body
  *        (by default Curl sends it to stdout)
  */
-static size_t gconn_consume_data(void *buffer, size_t size, size_t nmemb, void *userp)
+static size_t gconn_consume_data(void *buffer, size_t size, size_t nmemb,
+								 void *userp)
 {
-   return size * nmemb;
+	return size * nmemb;
 }
 
 /**
@@ -47,16 +48,16 @@ bool gconn_add_http_header(char *httpHeader)
 	struct curl_slist *tmpSlist = NULL;
 
 	tmpSlist = curl_slist_append(slist, httpHeader);
-	if (tmpSlist == NULL)
-	{
-		fprintf(stderr, "Error: HTTP header %s failed to apply\n", httpHeader);
+	if (!tmpSlist) {
+		fprintf(stderr, "Error: HTTP header %s failed to apply\n",
+				httpHeader);
 		curl_slist_free_all(slist);
 		return false;
 	}
 
- 	slist = tmpSlist;
+	slist = tmpSlist;
 
- 	return true;
+	return true;
 }
 
 /**
@@ -66,10 +67,10 @@ bool gconn_add_http_header(char *httpHeader)
  */
 bool gconn_set_num_req(unsigned long numReq)
 {
-	if (numReq >= 0 && numReq <= GCONN_MAX_NUM_REQ)
-	{
+	if (numReq >= 0 && numReq <= GCONN_MAX_NUM_REQ) {
 		_numReq = numReq ? numReq : GCONN_NUM_REQ;
-		fprintf(stderr, "Info: number of requests set to %lu\n", _numReq);
+		fprintf(stderr, "Info: number of requests set to %lu\n",
+				_numReq);
 		return true;
 	}
 
@@ -84,14 +85,15 @@ bool gconn_set_num_req(unsigned long numReq)
  */
 bool gconn_set_interval_req(unsigned long reqInterval)
 {
-	if (reqInterval >= 0 && reqInterval <= GCONN_MAX_REQ_INTERVAL_MS)
-	{
+	if (reqInterval >= 0 && reqInterval <= GCONN_MAX_REQ_INTERVAL_MS) {
 		_reqInterval = reqInterval;
-		fprintf(stderr, "Info: interval between requests set to %lu\n", _reqInterval);
+		fprintf(stderr, "Info: interval between requests set to %lu\n",
+				_reqInterval);
 		return true;
 	}
 
-	fprintf(stderr, "Error: invalid interval between requests: %lu\n", reqInterval);
+	fprintf(stderr, "Error: invalid interval between requests: %lu\n",
+			reqInterval);
 	return false;
 }
 
@@ -120,85 +122,83 @@ rscTimings *gconn_rsc_timings_http_get()
 		// Perform the request, res will get the return code
 		res = curl_easy_perform(curl);
 		// Check for errors
-		if (res == CURLE_OK)
-		{
+		if (res == CURLE_OK) {
 			res = curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &timings.remote_ip);
-			if (res != CURLE_OK || !timings.remote_ip)
-			{
-				fprintf(stderr, "Error: couldn't retrieve IP address of the HTTP server: %s\n",
-					curl_easy_strerror(res));
+			if (res != CURLE_OK || !timings.remote_ip) {
+				fprintf(stderr,
+						"Error: couldn't retrieve IP address of the HTTP server: %s\n",
+						curl_easy_strerror(res));
 				goto out;
 			}
 
 			res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &timings.http_code);
-			if (res != CURLE_OK)
-			{
-				fprintf(stderr, "Error: couldn't retrieve HTTP response code: %s\n",
-					curl_easy_strerror(res));
+			if (res != CURLE_OK) {
+				fprintf(stderr,
+						"Error: couldn't retrieve HTTP response code: %s\n",
+						curl_easy_strerror(res));
 				goto out;
 			}
 
 			res = curl_easy_getinfo(curl, CURLINFO_NAMELOOKUP_TIME, &timings.time_namelookup);
-			if (res != CURLE_OK)
-			{
-				fprintf(stderr, "Error: couldn't retrieve name lookup time: %s\n",
-					curl_easy_strerror(res));
+			if (res != CURLE_OK) {
+				fprintf(stderr,
+						"Error: couldn't retrieve name lookup time: %s\n",
+						curl_easy_strerror(res));
 				goto out;
 			}
 
 			res = curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &timings.time_connect);
-			if (res != CURLE_OK)
-			{
-				fprintf(stderr, "Error: couldn't retrieve connect time: %s\n",
-					curl_easy_strerror(res));
+			if (res != CURLE_OK) {
+				fprintf(stderr,
+						"Error: couldn't retrieve connect time: %s\n",
+						curl_easy_strerror(res));
 				goto out;
 			}
 
 			res = curl_easy_getinfo(curl, CURLINFO_APPCONNECT_TIME, &timings.time_appconnect);
-			if (res != CURLE_OK)
-			{
-				fprintf(stderr, "Error: couldn't retrieve application connect time: %s\n",
-					curl_easy_strerror(res));
+			if (res != CURLE_OK) {
+				fprintf(stderr,
+						"Error: couldn't retrieve application connect time: %s\n",
+						curl_easy_strerror(res));
 				goto out;
 			}
 
 			res = curl_easy_getinfo(curl, CURLINFO_PRETRANSFER_TIME, &timings.time_pretransfer);
-			if (res != CURLE_OK)
-			{
-				fprintf(stderr, "Error: couldn't retrieve pre-transfer time: %s\n",
-					curl_easy_strerror(res));
+			if (res != CURLE_OK) {
+				fprintf(stderr,
+						"Error: couldn't retrieve pre-transfer time: %s\n",
+						curl_easy_strerror(res));
 				goto out;
 			}
 
 			res = curl_easy_getinfo(curl, CURLINFO_STARTTRANSFER_TIME, &timings.time_starttransfer);
-			if (res != CURLE_OK)
-			{
-				fprintf(stderr, "Error: couldn't retrieve start-transfer time: %s\n",
-					curl_easy_strerror(res));
+			if (res != CURLE_OK) {
+				fprintf(stderr,
+						"Error: couldn't retrieve start-transfer time: %s\n",
+						curl_easy_strerror(res));
 				goto out;
 			}
 
 			res = curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &timings.time_total);
-			if (res != CURLE_OK)
-			{
-				fprintf(stderr, "Error: couldn't retrieve total time: %s\n",
-					curl_easy_strerror(res));
+			if (res != CURLE_OK) {
+				fprintf(stderr,
+						"Error: couldn't retrieve total time: %s\n",
+						curl_easy_strerror(res));
 				goto out;
 			}
 
 			res = curl_easy_getinfo(curl, CURLINFO_REDIRECT_TIME, &timings.time_redirect);
-			if (res != CURLE_OK)
-			{
-				fprintf(stderr, "Error: couldn't retrieve redirect time: %s\n",
-					curl_easy_strerror(res));
+			if (res != CURLE_OK) {
+				fprintf(stderr,
+						"Error: couldn't retrieve redirect time: %s\n",
+						curl_easy_strerror(res));
 				goto out;
 			}
 
 			pTimings = &timings;
-		} else
-		{
+		} else {
 			fprintf(stderr, "Error: couldn't make HTTP request: %s\n",
-				curl_easy_strerror(res));
+					curl_easy_strerror(res));
 		}
 out:
 		// Free the custom headers

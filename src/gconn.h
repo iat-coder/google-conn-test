@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+/* SPDX-License-Identifier: Unlicense */
 
 #ifndef _GCONN_H_
 #define _GCONN_H_
@@ -10,8 +10,7 @@
 #define GCONN_REQ_INTERVAL_MS 0
 #define GCONN_MAX_REQ_INTERVAL_MS 60000 // =1min
 
-struct rscTimings
-{
+struct rscTimings {
 	char *remote_ip;
 	long http_code;
 	double time_namelookup;
@@ -22,12 +21,13 @@ struct rscTimings
 	double time_total;
 	double time_redirect;
 };
+
 typedef struct rscTimings rscTimings;
 
-extern void gconn_init(void);
-extern bool gconn_add_http_header(char *httpHeader);
-extern bool gconn_set_num_req(unsigned long numReq);
-extern bool gconn_set_interval_req(unsigned long reqInterval);
-extern rscTimings *gconn_rsc_timings_http_get();
+void gconn_init(void);
+bool gconn_add_http_header(char *httpHeader);
+bool gconn_set_num_req(unsigned long numReq);
+bool gconn_set_interval_req(unsigned long reqInterval);
+rscTimings *gconn_rsc_timings_http_get();
 
 #endif
