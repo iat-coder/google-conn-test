@@ -10,7 +10,7 @@ Possible options:
 
 ### Example
 ```
-bin/gconn_app -H "User-Agent: gconn" "X-MyHeader: 123" -n 20 -i 1000
+bin/gconn_app -H "User-Agent: gconn" -H "X-MyHeader: 123" -n 20 -i 1000
 ```
 
 ## Directory structure
@@ -23,7 +23,9 @@ bin/gconn_app -H "User-Agent: gconn" "X-MyHeader: 123" -n 20 -i 1000
 
 ## Output
 Prints to stdout a string in the following format:
-> SKTEST;<IP address of HTTP server>;<HTTP response code>;<median of CURLINFO_NAMELOOKUP_TIME>;<median of CURLINFO_CONNECT_TIME>;<median of CURLINFO_STARTTRANSFER_TIME>;<median of CURLINFO_TOTAL_TIME>
+```
+SKTEST;<IP address of HTTP server>;<HTTP response code>;<median of CURLINFO_NAMELOOKUP_TIME>;<median of CURLINFO_CONNECT_TIME>;<median of CURLINFO_STARTTRANSFER_TIME>;<median of CURLINFO_TOTAL_TIME>
+```
 
 ### Example
 ```
@@ -50,4 +52,4 @@ Note: time values use double type representation with .6 digit precision
 
 ## Open ?
 - make scripts executable, run from anywhere
-- total time?
+- what's included in total time?
