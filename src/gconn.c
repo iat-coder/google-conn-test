@@ -18,7 +18,7 @@
 
 static struct curl_slist *slist;
 static int _numReq, _reqInterval;
-//static rscTimings medianTimings, *pMedianTimings;
+static rscTimings medianTimings, *pMedianTimings;
 
 /**
  * @brief Internal function used to consume HTTP response body
@@ -110,16 +110,24 @@ rscTimings *gconn_rsc_timings_http_get()
 {
 	CURL *curl;
 	CURLcode res;
-	int req;
-	rscTimings timings, *pTimings;
+	int req, timingType;
+	rscTimings timings, *pTimings = NULL;
+	double *timingSeries;
 
 	pTimings = (rscTimings *)malloc(sizeof(rscTimings) * _numReq);
-	if (!pTimings)
-	{
+	if (!pTimings) {
 		fprintf(stderr, "Error: couldn't allocate the resource timing set\n");
 		goto out;
 	}
 
+	timingSeries = (double *)malloc(sizeof(double) * _numReq * GCONN_NUM_TIMING_TYPE);
+	if (!timingSeries) {
+		fprintf(stderr, "Error: couldn't allocate the space for timing series\n");
+		free(pTimings);
+		goto out;
+	}
+
+	pMedianTimings = NULL;
 	curl = curl_easy_init();
 	if (curl) {
 		// Set google.com as the target
@@ -139,7 +147,7 @@ rscTimings *gconn_rsc_timings_http_get()
 		// Use persistent HTTP connection to make all requests
 		for (req = 0; req < _numReq; req++) {
 			// Perform the request, res will get the return code
-			fprintf(stderr, "Info: making HTTP request #%d\n", req+1);
+			fprintf(stderr, "Info: making HTTP request #%d\n", req + 1);
 			res = curl_easy_perform(curl);
 			// Check for errors
 			if (res == CURLE_OK) {
@@ -219,11 +227,13 @@ rscTimings *gconn_rsc_timings_http_get()
 			} else {
 				fprintf(stderr, "Error: couldn't make HTTP request: %s\n",
 						curl_easy_strerror(res));
+				goto cleanup;
 			}
 		}
 
-		for (req = 0; req < _numReq; req++)
-			printf("%d | %s | %lu | %.6lf | %.6lf | %.6lf | %.6lf | %.6lf | %.6lf | %.6lf\n",
+		// Extract timing series
+		for (req = 0; req < _numReq; req++) {
+			/*printf("%d | %s | %lu | %.6lf | %.6lf | %.6lf | %.6lf | %.6lf | %.6lf | %.6lf\n",
 				req+1,
 				pTimings[req].remote_ip,
 				pTimings[req].http_code,
@@ -233,11 +243,53 @@ rscTimings *gconn_rsc_timings_http_get()
 				pTimings[req].time_pretransfer,
 				pTimings[req].time_starttransfer,
 				pTimings[req].time_total,
-				pTimings[req].time_redirect);
+				pTimings[req].time_redirect);*/
 
+			timingSeries[req] = pTimings[req].time_namelookup;
+			timingSeries[req + _numReq] = pTimings[req].time_connect;
+			timingSeries[req + _numReq * 2] = pTimings[req].time_appconnect;
+			timingSeries[req + _numReq * 3] = pTimings[req].time_pretransfer;
+			timingSeries[req + _numReq * 4] = pTimings[req].time_starttransfer;
+			timingSeries[req + _numReq * 5] = pTimings[req].time_total;
+			timingSeries[req + _numReq * 6] = pTimings[req].time_redirect;
+		}
+
+		// Calculate medians for all timing series
+		for (timingType = 0; timingType < GCONN_NUM_TIMING_TYPE; timingType++) {
+			double m = find_median(timingSeries + _numReq * timingType, _numReq);
+
+			switch (timingType) {
+			case 0:
+				medianTimings.time_namelookup = m;
+				break;
+			case 1:
+				medianTimings.time_connect = m;
+				break;
+			case 2:
+				medianTimings.time_appconnect = m;
+				break;
+			case 3:
+				medianTimings.time_pretransfer = m;
+				break;
+			case 4:
+				medianTimings.time_starttransfer = m;
+				break;
+			case 5:
+				medianTimings.time_total = m;
+				break;
+			case 6:
+				medianTimings.time_redirect = m;
+				break;
+			}
+			//printf("%d median = %.6lf\n", timingType+1, find_median(timingSeries + _numReq * timingType, _numReq));
+		}
+		medianTimings.remote_ip = pTimings[0].remote_ip;
+		medianTimings.http_code = pTimings[0].http_code;
+		pMedianTimings = &medianTimings;
 cleanup:
-		// Free resource timeing set
+		// Free all malloc resources
 		free(pTimings);
+		free(timingSeries);
 
 		// Free the custom headers
 		curl_slist_free_all(slist);
@@ -246,5 +298,5 @@ cleanup:
 		curl_easy_cleanup(curl);
 	}
 out:
-	return pTimings;
+	return pMedianTimings;
 }

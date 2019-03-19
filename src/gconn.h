@@ -22,6 +22,7 @@ struct rscTimings {
 	double time_redirect;
 };
 
+#define GCONN_NUM_TIMING_TYPE 7 // as defined in rscTimings above
 typedef struct rscTimings rscTimings;
 
 void gconn_init(void);
