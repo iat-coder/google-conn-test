@@ -17,6 +17,7 @@
 
 static struct curl_slist *slist;
 static int _numReq, _reqInterval;
+static rscTimings timings, *pTimings;
 
 /**
  * @brief Internal function used to consume HTTP response body
@@ -50,10 +51,13 @@ bool gconn_add_http_header(char *httpHeader)
 
 	tmpSlist = curl_slist_append(slist, httpHeader);
 	if (!tmpSlist) {
-		fprintf(stderr, "Error: HTTP header %s failed to apply\n",
+		fprintf(stderr, "Error: HTTP header \"%s\" failed to apply\n",
 				httpHeader);
 		curl_slist_free_all(slist);
 		return false;
+	} else {
+		fprintf(stderr, "Info: HTTP header \"%s\" applied successfully\n",
+				httpHeader);
 	}
 
 	slist = tmpSlist;
@@ -76,6 +80,7 @@ bool gconn_set_num_req(int numReq)
 	}
 
 	fprintf(stderr, "Error: invalid number of requests: %d\n", numReq);
+	fprintf(stderr, "Info: number of requests defaults to %d\n", _numReq);
 	return false;
 }
 
@@ -95,6 +100,8 @@ bool gconn_set_interval_req(int reqInterval)
 
 	fprintf(stderr, "Error: invalid interval between requests: %d\n",
 			reqInterval);
+	fprintf(stderr, "Info: interval between requests defaults to %d\n",
+			_reqInterval);
 	return false;
 }
 
@@ -102,8 +109,8 @@ rscTimings *gconn_rsc_timings_http_get()
 {
 	CURL *curl;
 	CURLcode res;
-	rscTimings timings, *pTimings = NULL;
 
+	pTimings = NULL;
 	curl = curl_easy_init();
 	if (curl) {
 		// Set google.com as the target

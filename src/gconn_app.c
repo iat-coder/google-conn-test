@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
 	rscTimings *timings = gconn_rsc_timings_http_get();
 
 	// Display timing stats
+	printf("--- Output ---\n");
 	printf("SKTEST;%s;%lu;%.6lf;%.6lf;%.6lf;%.6lf\n",
 		   timings->remote_ip, timings->http_code, timings->time_namelookup,
 		   timings->time_connect, timings->time_starttransfer, timings->time_total);
