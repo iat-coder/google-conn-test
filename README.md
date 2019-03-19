@@ -2,7 +2,7 @@
 The test measures connection time parameters to http://www.google.com/
 
 ## Usage
-Linux/MacOS-compatible system is required. The provided makefile contains goals to build both the library and the application that uses it.
+Linux/MacOS-compatible system is required. Porting would be required for Windows (e.g. sleep functionality). The provided makefile contains goals to build both the library and the application that uses it.
 Possible options:
 - H "Header-name: Header-value": custom HTTP requests (can be specified multiple times)
 - n N: number of requests: if unspecified or set to 0 then adjusts it to GCONN_NUM_REQ (=10)
@@ -33,12 +33,21 @@ SKTEST;216.239.38.120;200;0.062880;0.091319;0.164425;0.371414
 ```
 Note: time values use double type representation with .6 digit precision
 
+## gconn library API
+|Function|Description|
+|--------|------------|
+|void gconn_init(void);|Initialize or reset internal structures|
+|bool gconn_add_http_header(char *httpHeader);|Add custom HTTP header|
+|bool gconn_set_num_req(int numReq);|Specify number of HTTP requests to make|
+|bool gconn_set_interval_req(int reqInterval);|Specify interval between HTTP requests|
+|resourceTiming_t *gconn_resource_timing_http_get();|Send HTTP requests and collect resource timing stats|
+
 ## Features
 - creates a library object file as well as an archive file for static linking (shared object file creation not supported)
 - uses libcurl v7.54.0 from Xcode, MacOS
 - verified on Linux image (via Docker)
 - supported parameters: custom HTTP headers, number of requests, interval between requests
-- styled using Linux checkpatch
+- styled up using Linux checkpatch (non-strict)
 
 ## Known limitations
 - does not check cross-traffic or current CPU load
@@ -49,7 +58,3 @@ Note: time values use double type representation with .6 digit precision
 - logging not implemented
 - single-threaded (not thread-safe)
 - http headers format parsing is relied upon CURL
-
-## Open ?
-- make scripts executable, run from anywhere
-- what's included in total time?
