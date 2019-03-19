@@ -12,10 +12,11 @@ Possible options:
 ```
 bin/gconn_app -H "User-Agent: gconn" -H "X-MyHeader: 123" -n 20 -i 1000
 ```
+Note: script/test.sh contains various test combinations for the above
 
 ## Directory structure
 - src/: library and application source code
-- scripts/: script to execute curl utility (for testing)
+- scripts/: test scripts
 - tools/: checkpatch for code styling
 - bin/: application executable (generated)
 - lib/: library archive (generated)
