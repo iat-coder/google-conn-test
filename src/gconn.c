@@ -19,7 +19,7 @@
 
 static struct curl_slist *slist;
 static int _numReq, _reqInterval;
-static rscTimings medianTimings, *pMedianTimings;
+static resourceTiming_t medianTiming, *pMedianTiming;
 
 /**
  * @brief Internal function used to consume HTTP response body
@@ -107,19 +107,19 @@ bool gconn_set_interval_req(int reqInterval)
 	return false;
 }
 
-rscTimings *gconn_rsc_timings_http_get()
+resourceTiming_t *gconn_resource_timing_http_get()
 {
 	CURL *curl;
 	CURLcode res;
 	int req, timingType;
-	rscTimings timings, *pTimings = NULL;
+	resourceTiming_t timing, *pTimings = NULL;
 	double *timingSeries;
 
 	struct timespec ts;
 	ts.tv_sec = _reqInterval / 1000;
 	ts.tv_nsec = (_reqInterval % 1000) * 1000000;
 
-	pTimings = (rscTimings *)malloc(sizeof(rscTimings) * _numReq);
+	pTimings = (resourceTiming_t *)malloc(sizeof(resourceTiming_t) * _numReq);
 	if (!pTimings) {
 		fprintf(stderr, "Error: couldn't allocate the resource timing set\n");
 		goto out;
@@ -132,7 +132,7 @@ rscTimings *gconn_rsc_timings_http_get()
 		goto out;
 	}
 
-	pMedianTimings = NULL;
+	pMedianTiming = NULL;
 	curl = curl_easy_init();
 	if (curl) {
 		// Set google.com as the target
@@ -156,15 +156,15 @@ rscTimings *gconn_rsc_timings_http_get()
 			res = curl_easy_perform(curl);
 			// Check for errors
 			if (res == CURLE_OK) {
-				res = curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &timings.remote_ip);
-				if (res != CURLE_OK || !timings.remote_ip) {
+				res = curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &timing.remote_ip);
+				if (res != CURLE_OK || !timing.remote_ip) {
 					fprintf(stderr,
 							"Error: couldn't retrieve IP address of the HTTP server: %s\n",
 							curl_easy_strerror(res));
 					goto cleanup;
 				}
 
-				res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &timings.http_code);
+				res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &timing.http_code);
 				if (res != CURLE_OK) {
 					fprintf(stderr,
 							"Error: couldn't retrieve HTTP response code: %s\n",
@@ -172,7 +172,7 @@ rscTimings *gconn_rsc_timings_http_get()
 					goto cleanup;
 				}
 
-				res = curl_easy_getinfo(curl, CURLINFO_NAMELOOKUP_TIME, &timings.time_namelookup);
+				res = curl_easy_getinfo(curl, CURLINFO_NAMELOOKUP_TIME, &timing.time_namelookup);
 				if (res != CURLE_OK) {
 					fprintf(stderr,
 							"Error: couldn't retrieve name lookup time: %s\n",
@@ -180,7 +180,7 @@ rscTimings *gconn_rsc_timings_http_get()
 					goto cleanup;
 				}
 
-				res = curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &timings.time_connect);
+				res = curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &timing.time_connect);
 				if (res != CURLE_OK) {
 					fprintf(stderr,
 							"Error: couldn't retrieve connect time: %s\n",
@@ -188,7 +188,7 @@ rscTimings *gconn_rsc_timings_http_get()
 					goto cleanup;
 				}
 
-				res = curl_easy_getinfo(curl, CURLINFO_APPCONNECT_TIME, &timings.time_appconnect);
+				res = curl_easy_getinfo(curl, CURLINFO_APPCONNECT_TIME, &timing.time_appconnect);
 				if (res != CURLE_OK) {
 					fprintf(stderr,
 							"Error: couldn't retrieve application connect time: %s\n",
@@ -196,7 +196,7 @@ rscTimings *gconn_rsc_timings_http_get()
 					goto cleanup;
 				}
 
-				res = curl_easy_getinfo(curl, CURLINFO_PRETRANSFER_TIME, &timings.time_pretransfer);
+				res = curl_easy_getinfo(curl, CURLINFO_PRETRANSFER_TIME, &timing.time_pretransfer);
 				if (res != CURLE_OK) {
 					fprintf(stderr,
 							"Error: couldn't retrieve pre-transfer time: %s\n",
@@ -204,7 +204,7 @@ rscTimings *gconn_rsc_timings_http_get()
 					goto cleanup;
 				}
 
-				res = curl_easy_getinfo(curl, CURLINFO_STARTTRANSFER_TIME, &timings.time_starttransfer);
+				res = curl_easy_getinfo(curl, CURLINFO_STARTTRANSFER_TIME, &timing.time_starttransfer);
 				if (res != CURLE_OK) {
 					fprintf(stderr,
 							"Error: couldn't retrieve start-transfer time: %s\n",
@@ -212,7 +212,7 @@ rscTimings *gconn_rsc_timings_http_get()
 					goto cleanup;
 				}
 
-				res = curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &timings.time_total);
+				res = curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &timing.time_total);
 				if (res != CURLE_OK) {
 					fprintf(stderr,
 							"Error: couldn't retrieve total time: %s\n",
@@ -220,7 +220,7 @@ rscTimings *gconn_rsc_timings_http_get()
 					goto cleanup;
 				}
 
-				res = curl_easy_getinfo(curl, CURLINFO_REDIRECT_TIME, &timings.time_redirect);
+				res = curl_easy_getinfo(curl, CURLINFO_REDIRECT_TIME, &timing.time_redirect);
 				if (res != CURLE_OK) {
 					fprintf(stderr,
 							"Error: couldn't retrieve redirect time: %s\n",
@@ -228,7 +228,7 @@ rscTimings *gconn_rsc_timings_http_get()
 					goto cleanup;
 				}
 
-				pTimings[req] = timings;
+				pTimings[req] = timing;
 			} else {
 				fprintf(stderr, "Error: couldn't make HTTP request: %s\n",
 						curl_easy_strerror(res));
@@ -268,32 +268,32 @@ rscTimings *gconn_rsc_timings_http_get()
 
 			switch (timingType) {
 			case 0:
-				medianTimings.time_namelookup = m;
+				medianTiming.time_namelookup = m;
 				break;
 			case 1:
-				medianTimings.time_connect = m;
+				medianTiming.time_connect = m;
 				break;
 			case 2:
-				medianTimings.time_appconnect = m;
+				medianTiming.time_appconnect = m;
 				break;
 			case 3:
-				medianTimings.time_pretransfer = m;
+				medianTiming.time_pretransfer = m;
 				break;
 			case 4:
-				medianTimings.time_starttransfer = m;
+				medianTiming.time_starttransfer = m;
 				break;
 			case 5:
-				medianTimings.time_total = m;
+				medianTiming.time_total = m;
 				break;
 			case 6:
-				medianTimings.time_redirect = m;
+				medianTiming.time_redirect = m;
 				break;
 			}
 			//printf("%d median = %.6lf\n", timingType+1, find_median(timingSeries + _numReq * timingType, _numReq));
 		}
-		medianTimings.remote_ip = pTimings[0].remote_ip;
-		medianTimings.http_code = pTimings[0].http_code;
-		pMedianTimings = &medianTimings;
+		medianTiming.remote_ip = pTimings[0].remote_ip;
+		medianTiming.http_code = pTimings[0].http_code;
+		pMedianTiming = &medianTiming;
 cleanup:
 		// Free all malloc resources
 		free(pTimings);
@@ -306,5 +306,5 @@ cleanup:
 		curl_easy_cleanup(curl);
 	}
 out:
-	return pMedianTimings;
+	return pMedianTiming;
 }

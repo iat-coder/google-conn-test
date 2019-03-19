@@ -10,7 +10,7 @@
 #define GCONN_REQ_INTERVAL_MS 0
 #define GCONN_MAX_REQ_INTERVAL_MS 60000 // =1min
 
-struct rscTimings {
+struct resourceTiming {
 	char *remote_ip;
 	long http_code;
 	double time_namelookup;
@@ -22,13 +22,13 @@ struct rscTimings {
 	double time_redirect;
 };
 
-#define GCONN_NUM_TIMING_TYPE 7 // as defined in rscTimings above
-typedef struct rscTimings rscTimings;
+#define GCONN_NUM_TIMING_TYPE 7 // as defined in resourceTiming above
+typedef struct resourceTiming resourceTiming_t;
 
 void gconn_init(void);
 bool gconn_add_http_header(char *httpHeader);
 bool gconn_set_num_req(int numReq);
 bool gconn_set_interval_req(int reqInterval);
-rscTimings *gconn_rsc_timings_http_get();
+resourceTiming_t *gconn_resource_timing_http_get();
 
 #endif

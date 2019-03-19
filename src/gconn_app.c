@@ -91,13 +91,13 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Warning: extra argument \'%s\' ignored\n", argv[optind]);
 
 	// Call the library function
-	rscTimings *timings = gconn_rsc_timings_http_get();
+	resourceTiming_t *timing = gconn_resource_timing_http_get();
 
 	// Display timing stats
 	printf("--- Output ---\n");
 	printf("SKTEST;%s;%lu;%.6lf;%.6lf;%.6lf;%.6lf\n",
-		   timings->remote_ip, timings->http_code, timings->time_namelookup,
-		   timings->time_connect, timings->time_starttransfer, timings->time_total);
+		   timing->remote_ip, timing->http_code, timing->time_namelookup,
+		   timing->time_connect, timing->time_starttransfer, timing->time_total);
 
 	return 0;
 }
