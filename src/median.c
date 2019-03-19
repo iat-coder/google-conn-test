@@ -23,8 +23,8 @@
  */
 static int compare_doubles(const void *a, const void *b)
 {
-	const double *da = (const double *) a;
-	const double *db = (const double *) b;
+	const double *da = (const double *)a;
+	const double *db = (const double *)b;
 
 	return (*da > *db) - (*da < *db);
 }
@@ -37,15 +37,19 @@ static int compare_doubles(const void *a, const void *b)
  * @param arr Array of values to find median of
  * @return Median value
  */
-double find_median(double arr[], unsigned size)
+double find_median(double arr[], unsigned int size)
 {
+	// Simple sanity check to avoid accidental segmentation faults
+	if (size == 0 || !arr)
+		return 0;
+
 	// First sort the array (order does not matter)
 	// Use QuickSort (most of the elements are random and array size is small)
 	qsort(arr, size, sizeof(double), compare_doubles);
 
 	// Check for even case
 	if (size % 2)
-		return arr[size/2];
+		return arr[size / 2];
 
-	return (arr[(size-1)/2] + arr[size/2])/2.0;
+	return (arr[(size - 1) / 2] + arr[size / 2]) / 2.0;
 }

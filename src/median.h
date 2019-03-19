@@ -3,6 +3,6 @@
 #ifndef _MEDIAN_H_
 #define _MEDIAN_H_
 
-double find_median(double arr[], unsigned size);
+double find_median(double arr[], unsigned int size);
 
 #endif
