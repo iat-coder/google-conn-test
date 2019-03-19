@@ -107,6 +107,12 @@ bool gconn_set_interval_req(int reqInterval)
 	return false;
 }
 
+/**
+ * @brief Collect resource timing stats (median of time series values
+ *        defined in resourceTiming)
+ * @param None
+ * @return resourceTiming structure containing median values
+ */
 resourceTiming_t *gconn_resource_timing_http_get()
 {
 	CURL *curl;

@@ -1,7 +1,6 @@
 TARGET_LIB = gconn
 TARGET_APP = $(TARGET_LIB)_app
 
-
 BIN = bin/
 LIB = lib/
 OBJ = obj/

@@ -17,6 +17,12 @@
 
 #include "gconn.h"
 
+/**
+ * @brief Validate option value as decimal input
+ * @param opt Option value as string
+ * @param val Converted integer value
+ * @return 0 on success, <0 if failed
+ */
 static int validate_int_option(char *opt, int *val)
 {
 	char *pEnd = NULL;
