@@ -11,6 +11,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <curl/curl.h>
 
 #include "gconn.h"
@@ -113,6 +114,10 @@ rscTimings *gconn_rsc_timings_http_get()
 	int req, timingType;
 	rscTimings timings, *pTimings = NULL;
 	double *timingSeries;
+
+	struct timespec ts;
+	ts.tv_sec = _reqInterval / 1000;
+	ts.tv_nsec = (_reqInterval % 1000) * 1000000;
 
 	pTimings = (rscTimings *)malloc(sizeof(rscTimings) * _numReq);
 	if (!pTimings) {
@@ -229,6 +234,9 @@ rscTimings *gconn_rsc_timings_http_get()
 						curl_easy_strerror(res));
 				goto cleanup;
 			}
+
+			// Delay between requests
+			nanosleep(&ts, NULL);
 		}
 
 		// Extract timing series
