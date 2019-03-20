@@ -8,6 +8,8 @@ Possible options:
 - n N: number of requests: if unspecified or set to 0 then adjusts it to GCONN_NUM_REQ (=10)
 - i I: interval between requests: if unspecified or set to 0 then no delay is introduced
 
+Note: By default, additional diagnostic output is produced in stderr. To disable it redirect stderr to /dev/null (e.g. 2>/dev/null)
+
 ### Example
 ```
 bin/gconn_app -H "User-Agent: gconn" -H "X-MyHeader: 123" -n 20 -i 1000
