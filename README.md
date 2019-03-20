@@ -50,7 +50,10 @@ Note: time values use double type representation with .6 digit precision
 - uses libcurl v7.54.0 from Xcode, MacOS
 - verified on Linux image (via Docker)
 - supported parameters: custom HTTP headers, number of requests, interval between requests
+
+## Memos
 - styled up using Linux checkpatch (non-strict)
+- memory leakages checked with Memcheck (Valgrind)
 
 ## Known limitations
 - does not check cross-traffic or current CPU load
