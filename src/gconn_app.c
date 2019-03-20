@@ -54,6 +54,12 @@ static int validate_int_option(char *opt, int *val)
 	return 0;
 }
 
+/**
+ * @brief Program entry point (option parsing and library calls)
+ * @param argc Number of command line arguments
+ * @param argv Command line arguments
+ * @return 0 on success, <0 if failed
+ */
 int main(int argc, char *argv[])
 {
 	int opt, res;
@@ -85,10 +91,10 @@ int main(int argc, char *argv[])
 			break;
 		case ':':
 			fprintf(stderr, "Error: option %s needs a value\n", optarg);
-			break;
+			return -EINVAL;
 		case '?':
 			fprintf(stderr, "Error: unknown option %c\n", optopt);
-			break;
+			return -ENOSYS;
 		}
 	}
 
@@ -100,7 +106,7 @@ int main(int argc, char *argv[])
 	resourceTiming_t *timing = gconn_resource_timing_http_get();
 
 	// Display timing stats
-	printf("--- Output ---\n");
+	fprintf(stderr, "--- Output ---\n");
 	printf("SKTEST;%s;%lu;%.6lf;%.6lf;%.6lf;%.6lf\n",
 		   timing->remote_ip, timing->http_code, timing->time_namelookup,
 		   timing->time_connect, timing->time_starttransfer, timing->time_total);
